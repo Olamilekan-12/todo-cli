@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Task struct {
@@ -31,4 +32,23 @@ func main() {
 		Title: "Title two",
 	})
 
+	switch args[1] {
+	case "add":
+		if len(args) < 3 {
+			fmt.Fprintln(os.Stderr, "usage: todo <add> <title>")
+			os.Exit(1)
+		}
+		title := strings.Join(args[2:], " ")
+		fmt.Println("adding a task")
+		fmt.Println(title)
+		tasks = append(tasks, Task{
+			ID:    len(tasks) + 1,
+			Title: title,
+		})
+		fmt.Println(tasks)
+	case "list":
+		fmt.Println("listing tasks")
+	default:
+		fmt.Println("Unknown command")
+	}
 }
