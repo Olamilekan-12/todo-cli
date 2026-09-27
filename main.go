@@ -1,15 +1,17 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 )
 
 type Task struct {
-	ID    int
-	Title string
-	Done  bool
+	ID    int    `json:"id"`
+	Title string `json:"title"`
+	Done  bool   `json:"done"`
 }
 
 func main() {
@@ -18,19 +20,20 @@ func main() {
 		fmt.Fprintln(os.Stderr, "usage: todo <add|list|done> [task]")
 		os.Exit(1)
 	}
-	fmt.Println(args[1])
-	taskOne := Task{
-		ID:    1,
-		Title: "Title one",
+	var tasks []Task
+	tasksByte, err := os.ReadFile("tasks.json")
+	if errors.Is(err, os.ErrNotExist) {
+		// No file to work with atm...
+	} else if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading file %v\n", err)
+		os.Exit(1)
+	} else {
+		err = json.Unmarshal(tasksByte, &tasks)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error unmarshalling file %v\n", err)
+			os.Exit(1)
+		}
 	}
-	tasks := []Task{
-		taskOne,
-	}
-
-	tasks = append(tasks, Task{
-		ID:    2,
-		Title: "Title two",
-	})
 
 	switch args[1] {
 	case "add":
@@ -40,12 +43,20 @@ func main() {
 		}
 		title := strings.Join(args[2:], " ")
 		fmt.Println("adding a task")
-		fmt.Println(title)
+
 		tasks = append(tasks, Task{
 			ID:    len(tasks) + 1,
 			Title: title,
 		})
-		fmt.Println(tasks)
+		data, err := json.Marshal(tasks)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error encoding task %v\n", err)
+			os.Exit(1)
+		}
+		if err := os.WriteFile("tasks.json", data, 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing to file %v\n", err)
+			os.Exit(1)
+		}
 	case "list":
 		fmt.Println("listing tasks")
 	default:
