@@ -59,6 +59,13 @@ func main() {
 		}
 	case "list":
 		fmt.Println("listing tasks")
+		for _, task := range tasks {
+			box := "[ ]"
+			if task.Done {
+				box = "[x]"
+			}
+			fmt.Printf("%d. %s %s\n", task.ID, box, task.Title)
+		}
 	default:
 		fmt.Println("Unknown command")
 	}
