@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -12,6 +13,16 @@ type Task struct {
 	ID    int    `json:"id"`
 	Title string `json:"title"`
 	Done  bool   `json:"done"`
+}
+
+func getTaskById(tsk []Task, id int) (*Task, bool) {
+
+	for i := range tsk {
+		if tsk[i].ID == id {
+			return &tsk[i], true
+		}
+	}
+	return nil, false
 }
 
 func main() {
@@ -66,6 +77,34 @@ func main() {
 			}
 			fmt.Printf("%d. %s %s\n", task.ID, box, task.Title)
 		}
+	case "done":
+		if len(args) < 3 {
+			fmt.Fprintln(os.Stderr, "usage: todo done <id>")
+			os.Exit(1)
+		}
+		id, err := strconv.Atoi(args[2])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Invalid id %d %v \n", id, err)
+			os.Exit(1)
+		}
+		task, ok := getTaskById(tasks, id)
+		if !ok {
+			fmt.Fprintf(os.Stderr, "Task not found for id %d = %v \n", id, ok)
+			os.Exit(1)
+		} else {
+			task.Done = true
+			tasksByte, err := json.Marshal(tasks)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error encoding task %v\n", err)
+				os.Exit(1)
+			}
+
+			if err := os.WriteFile("tasks.json", tasksByte, 0644); err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing to file %v\n", err)
+				os.Exit(1)
+			}
+		}
+
 	default:
 		fmt.Println("Unknown command")
 	}
