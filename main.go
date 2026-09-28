@@ -25,6 +25,14 @@ func getTaskById(tsk []Task, id int) (*Task, bool) {
 	return nil, false
 }
 
+func saveTasks(tasks []Task) error {
+	data, err := json.Marshal(tasks)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile("tasks.json", data, 0644)
+}
+
 func main() {
 	args := os.Args
 	if len(args) < 2 {
@@ -59,24 +67,25 @@ func main() {
 			ID:    len(tasks) + 1,
 			Title: title,
 		})
-		data, err := json.Marshal(tasks)
+		err := saveTasks(tasks)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error encoding task %v\n", err)
-			os.Exit(1)
-		}
-		if err := os.WriteFile("tasks.json", data, 0644); err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing to file %v\n", err)
+			fmt.Fprintf(os.Stderr, "error saving tasks: %v\n", err)
 			os.Exit(1)
 		}
 	case "list":
-		fmt.Println("listing tasks")
-		for _, task := range tasks {
-			box := "[ ]"
-			if task.Done {
-				box = "[x]"
+		if len(tasks) > 0 {
+			fmt.Println("listing tasks")
+			for _, task := range tasks {
+				box := "[ ]"
+				if task.Done {
+					box = "[x]"
+				}
+				fmt.Printf("%d. %s %s\n", task.ID, box, task.Title)
 			}
-			fmt.Printf("%d. %s %s\n", task.ID, box, task.Title)
+		} else {
+			fmt.Println("No task available")
 		}
+
 	case "done":
 		if len(args) < 3 {
 			fmt.Fprintln(os.Stderr, "usage: todo done <id>")
@@ -89,18 +98,13 @@ func main() {
 		}
 		task, ok := getTaskById(tasks, id)
 		if !ok {
-			fmt.Fprintf(os.Stderr, "Task not found for id %d = %v \n", id, ok)
+			fmt.Fprintf(os.Stderr, "Task not found for id %d\n", id)
 			os.Exit(1)
 		} else {
 			task.Done = true
-			tasksByte, err := json.Marshal(tasks)
+			err := saveTasks(tasks)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error encoding task %v\n", err)
-				os.Exit(1)
-			}
-
-			if err := os.WriteFile("tasks.json", tasksByte, 0644); err != nil {
-				fmt.Fprintf(os.Stderr, "Error writing to file %v\n", err)
+				fmt.Fprintf(os.Stderr, "error saving tasks: %v\n", err)
 				os.Exit(1)
 			}
 		}
