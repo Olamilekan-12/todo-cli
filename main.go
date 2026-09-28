@@ -84,7 +84,7 @@ func main() {
 		}
 		id, err := strconv.Atoi(args[2])
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Invalid id %d %v \n", id, err)
+			fmt.Fprintf(os.Stderr, "Invalid id %q %v \n", args[2], err)
 			os.Exit(1)
 		}
 		task, ok := getTaskById(tasks, id)
