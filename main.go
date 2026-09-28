@@ -110,6 +110,7 @@ func main() {
 		}
 
 	default:
-		fmt.Println("Unknown command")
+		fmt.Fprintln(os.Stderr, "Unknown command")
+		os.Exit(1)
 	}
 }
